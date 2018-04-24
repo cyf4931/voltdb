@@ -32,6 +32,23 @@ import org.voltdb.compiler.VoltProjectBuilder;
 
 public class TestAdHocLargeSuite extends RegressionSuite {
 
+    public void testUnsupported() throws Exception {
+        Client client = getClient();
+        // DML
+        String[] DMLs = {
+                "insert into t values (1, '2', '3', '4');",
+                "delete from t;",
+                "update t set i=0;"
+        };
+        for (String dml : DMLs) {
+            verifyProcFails(client, "DML in large query mode is not supported.", "@AdHocLarge", dml);
+        }
+
+        // Window function
+        String windowFunc = "select count(*) over (partition by i) from t;";
+        verifyProcFails(client, "Window function in large query mode is not supported.", "@AdHocLarge", windowFunc);
+    }
+
     public void testBasic() throws Exception {
         if (isValgrind()) {
             // don't run this test under valgrind, as it needs IPC support.
